@@ -20,8 +20,7 @@ def main():
     best_containers_adj = []
 
     for cont_group in containers_groups:
-        tmp_containers_adj = ecl.composition_linker(cont_group, elements_adj)
-        tmp_q_comp = ecl.q_composition(tmp_containers_adj)
+        tmp_containers_adj, tmp_q_comp = ecl.composition_linker(cont_group, elements_adj)
 
         if best_q_comp < 0 or tmp_q_comp < best_q_comp:
             best_q_comp = tmp_q_comp
