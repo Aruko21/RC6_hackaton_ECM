@@ -184,7 +184,7 @@ def composition_linker(containers, adj_matrix):
     a = adj_matrix[:]
     res_v = fun1(a, containers)
     opt_s, opt_containers = optimize(adj_matrix, res_v)
-    containers_adj, _ = q_composition(opt_s, opt_containers)
+    containers_adj, q = q_composition(opt_s, opt_containers)
 
     # На выход - матрица смежностей контейнеров
-    return containers_adj
+    return containers_adj, q
