@@ -1,6 +1,5 @@
-import numpy as np
 import random as rand
-
+import sys
 
 # Задача компоновки
 
@@ -26,14 +25,11 @@ def composition_linker(containers, adj_matrix):
                 k = n
                 break
             n += 1
-        print(k)
-        print(min_c)
-        print(c)
         ind = [k]
-        for i in range(len(a[1])):
+        for i in range(len(a[0])):
             if a[k][i] != 0:
                 ind.append(i)
-        print("indexes   ", ind)
+                
         sum_ind = sum(ind)
         dif_n = []    
         ind.sort(reverse=True)
@@ -74,47 +70,121 @@ def composition_linker(containers, adj_matrix):
         if len(a) != 0:
             for i in ind:
                 del a[i]
-            print("del str", a)
+                
             if len(a) != 0:
                 a_transp = transpouse(a)
                 for i in ind:
                     del a_transp[i]
                 a = transpouse(a_transp)
-        print(a)
         return a, ind, index_new, index_start
 
     def fun1(a, b):
-        index_start = [1,2,3,4,5,6,7]
+        index_start = list(range(0, len(a)))
+        
         ind_new = [[0] for i in range(len(b))]
         ind = [[0] for i in range(len(b))]
         for i in range(len(b)):
             a, ind[i], ind_new[i], index_start = fun(a, b[i], index_start)
         return ind_new
+    
+    def analyze_delta_r(s, setsV):
+        min_dim = len(setsV[0])
+        vertic = []
+        gorisont = setsV[:]
 
-    def fun2(a, v, v_all):
-        n = len(v)
-        for i in range(n-1):
-            for j in range(i+1, n):
-                v1 = v_all[i]
-                v2 = v_all[j]
-                for h in v1:
-                    for d in v2:
-                        if a[h-1][d-1] != 0:
-                            v[i][j] += 1
-        q = 0
-        for i in range(n-1):
-            for j in range(i+1, n):
-                if v[i][j] != 0:
-                    q += v[i][j]
-                    v[j][i] = v[i][j]
-        return v, q
+        for i in range(len(setsV)):
+            if len(setsV[i]) <= min_dim:
+                min_dim = len(setsV[i])
+                vertic = setsV[i]
+        if vertic in gorisont:
+            gorisont.remove(vertic)
+            gorisont = sum(gorisont, [])
 
+        r = [[0 for j in range(len(gorisont))] for i in range(min_dim)]
+
+        max_el = 0
+        max_i = -1
+        max_j = -1
+
+        for i in range(min_dim):
+            for j in range(len(gorisont)):
+                sum_iqp = 0
+                sum_jqp = 0
+                sum_ipq = 0
+                sum_jpq = 0
+                for k in vertic:
+                    sum_jqp += s[i][k]
+                    sum_ipq += s[j][k]
+                for k in setsV:
+                    if gorisont[j] in k:
+                        for n in k:
+                            sum_iqp += s[i][n]
+                            sum_jpq += s[j][n]
+                        break
+
+                r[i][j] = sum_iqp - sum_jqp + sum_ipq - sum_jpq - 2 * s[i][j]
+
+                if r[i][j] > max_el:
+                    max_el = r[i][j]
+                    max_i = i
+                    max_j = j
+        return max_el, max_i, max_j
+    
+    def optimize(s_matr, setsV):
+        opt_containers = []
+        res = setsV[:]
+        s = s_matr[:]
+
+        while len(res) > 1:
+            q_prev = sys.maxsize
+            q_cur = sys.maxsize - 1
+            while True:
+                if q_prev <= q_cur:
+                    break
+                q_prev = q_cur
+                _, q = q_composition(s, res)
+                q_cur = q
+
+                max_el, max_i, max_j = analyze_delta_r(s, res)
+                if max_el <= 0:
+                    break
+
+                s[max_i], s[max_j] = s[max_j], s[max_i]
+                for i in range(len(s)):
+                    s[i][max_i], s[i][max_j] = s[i][max_j], s[i][max_i]
+                ind = 0
+                swap_i1 = -1
+                swap_j1 = -1
+                swap_i2 = -1
+                swap_j2 = -1
+                for i in range(len(res)):
+                    for j in range(len(res[i])):
+                        if ind == max_i:
+                            swap_i1 = i
+                            swap_j1 = j
+                        if ind == max_j:
+                            swap_i2 = i
+                            swap_j2 = j
+                        ind += 1
+                res[swap_i1][swap_j1], res[swap_i2][swap_j2] = res[swap_i2][swap_j2], res[swap_i1][swap_j1]
+
+            min_dim = len(res[0])
+            rem_ind = -1
+            for i in range(len(res)):
+                if len(res[i]) <= min_dim:
+                    min_dim = len(res[i])
+                    rem_ind = i
+            if res[rem_ind] in res:
+                opt_containers.append(res[rem_ind])
+                res.remove(res[rem_ind])
+        opt_containers.append(res[0])
+
+        return s, opt_containers
+    
     a = adj_matrix[:]
-
-    res_v = fun1(adj_matrix, containers)
-
-    b = [[0,0,0],[0,0,0],[0,0,0]]
-    containers_adj, q = fun2(a, b, res_v)
+    res_v = fun1(a, containers)
+    opt_s, opt_containers = optimize(adj_matrix, res_v)
+    containers_adj, q = q_composition(opt_s, opt_containers)
 
     # На выход - матрица смежностей контейнеров
-    return containers_adj
+    return containers_adj, q
