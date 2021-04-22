@@ -41,6 +41,18 @@ def main():
         [0, 0, 0, 0, 4, 0, 2, 0, 0]
     ])
 
+    # получение воможных компоновок контейнеров
+    containers_groups = []
+
+    best_q_comp = -1
+    best_containers_adj = []
+
+    for cont_group in containers_groups:
+        tmp_containers_adj, tmp_q_comp = ecl.composition_linker(cont_group, elements_adj)
+
+        if best_q_comp < 0 or tmp_q_comp < best_q_comp:
+            best_q_comp = tmp_q_comp
+            best_containers_adj = tmp_containers_adj
     board_matrix = ecl.placement_linker(mock_cont_adj)
     # Печать результатов ?
 
