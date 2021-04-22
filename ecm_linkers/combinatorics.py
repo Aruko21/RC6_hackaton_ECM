@@ -6,9 +6,8 @@ import itertools
 
 # На вход:
 # n_elems - количество элементов
-# capacities - list с возможными емкостями контейнеров
+# capacities - tuple с возможными емкостями контейнеров
 def get_containers_by_elems(n_elems, capacities):
-    capacities.sort()
     res_array = []
 
     for m in range(1, n_elems):
@@ -25,8 +24,8 @@ def get_containers_by_elems(n_elems, capacities):
             if sum(res) == n_elems:
                 containers.append(res)
 
-    # На выход - list list'ов с перечислением контейнеров, где значение - емкость контейнера
-    # TODO: проверить выходное значение - должен быть list list'ов
+    # На выход - list кортежей с перечислением контейнеров, где значение - емкость контейнера
+    # Например, [(6, 7, 7), (2, 4, 7 ,7), ...]
     return containers
 
 
@@ -35,3 +34,4 @@ def get_containers_by_elems(n_elems, capacities):
 #     n = 20
 #
 #     print(get_containers_by_elems(n, containers_list_outer))
+#     print(1)
