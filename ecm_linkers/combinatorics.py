@@ -25,7 +25,8 @@ def get_containers_by_elems(n_elems, capacities):
             if sum(res) == n_elems:
                 containers.append(res)
 
-    # На выход - list с перечислением контейнеров, где значение - емкость контейнера
+    # На выход - list list'ов с перечислением контейнеров, где значение - емкость контейнера
+    # TODO: проверить выходное значение - должен быть list list'ов
     return containers
 
 

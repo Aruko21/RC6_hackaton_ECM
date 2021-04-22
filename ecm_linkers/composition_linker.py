@@ -1,5 +1,6 @@
 import random as rand
 import sys
+from .analysis import q_composition
 
 
 # Задача компоновки
@@ -14,7 +15,7 @@ def transpose(mat):
     return matrix
 
 
-def fun(a, b, index_start):
+def compose_container(a, b, index_start):
     c = [sum(i) for i in a]
     min_c = min(c)
     k = 0
@@ -86,14 +87,17 @@ def fun(a, b, index_start):
     return a, ind, index_new, index_start
 
 
-def fun1(a, b):
+def compose_containers(adj_matrix, b):
+    a = adj_matrix[:]
+
     index_start = list(range(0, len(a)))
 
     ind_new = [[0] for i in range(len(b))]
     ind = [[0] for i in range(len(b))]
 
     for i in range(len(b)):
-        a, ind[i], ind_new[i], index_start = fun(a, b[i], index_start)
+        a, ind[i], ind_new[i], index_start = compose_container(a, b[i], index_start)
+
     return ind_new
 
 
@@ -145,8 +149,8 @@ def analyze_delta_r(s, setsV):
 
 def optimize(s_matr, setsV):
     opt_containers = []
-    res = setsV[:]
-    s = s_matr[:]
+    res = setsV[:]  # массив контейнеров
+    s = s_matr[:]   # матрица смежностей элементов
 
     while len(res) > 1:
         q_prev = sys.maxsize
@@ -155,7 +159,10 @@ def optimize(s_matr, setsV):
             if q_prev <= q_cur:
                 break
             q_prev = q_cur
-            _, q = q_composition(s, res)
+
+            containers_adj = compose_containers_adj(s, res)
+            q = q_composition(containers_adj)
+
             q_cur = q
 
             max_el, max_i, max_j = analyze_delta_r(s, res)
@@ -200,26 +207,28 @@ def optimize(s_matr, setsV):
     return s, opt_containers
 
 
-# На вход:
-# containers - список возможных размерностей контейнеров
-# adj_matrix - матица смежностей элементов
-def composition_linker(containers, adj_matrix):
-    a = adj_matrix[:]
-    res_v = fun1(a, containers)
-    opt_s, opt_containers = optimize(adj_matrix, res_v)
-
-    n = len(opt_containers)
+def compose_containers_adj(adj_matrix, containers):
+    n = len(containers)
     external_rel_matrix = [[0 for j in range(n)] for i in range(n)]
 
     for i in range(n - 1):
         for j in range(i + 1, n):
-            v1 = opt_containers[i]
-            v2 = opt_containers[j]
-
+            v1 = containers[i]
+            v2 = containers[j]
             for h in v1:
                 for d in v2:
-                    if opt_s[h][d] != 0:
+                    if adj_matrix[h][d] != 0:
                         external_rel_matrix[i][j] += 1
 
-    # На выход - матрица смежностей контейнеров
     return external_rel_matrix
+
+
+# На вход:
+# containers - список возможных размерностей контейнеров
+# adj_matrix - матица смежностей элементов
+def composition_linker(containers, adj_matrix):
+    res_v = compose_containers(adj_matrix, containers)
+    opt_s, opt_containers = optimize(adj_matrix, res_v)
+
+    # На выход - матрица смежностей контейнеров
+    return compose_containers_adj(opt_s, opt_containers)
