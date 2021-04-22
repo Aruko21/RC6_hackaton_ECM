@@ -4,16 +4,16 @@ import pandas as pd
 import argparse
 
 
-# Мапа с размерами контейнеров, где ключ - размерность (строка), значение - кортеж с размерностями
+# Мапа с размерами контейнеров, где ключ - имя файла (строка), значение - кортеж с размерностями
 CONT_SIZES = {
-    '20': (3, 4, 5, 7),
-    '50': (10, 13, 15, 17),
-    '250': (30, 45, 55, 70, 80),
-    '1000': (100, 125, 175, 225),
-    '10000': (2000, 2500, 3000),
+    'test20.txt': (3, 4, 5, 7),
+    'test50.txt': (10, 13, 15, 17),
+    'test250.txt': (30, 45, 55, 70, 80),
+    'test1000.txt': (100, 125, 175, 225),
+    'test10000.txt': (2000, 2500, 3000),
 
-    '101': (3, 4, 5, 7),
-    '777': (3, 4, 5, 7, 11, 13, 17, 19, 23)
+    'test101.txt': (3, 4, 5, 7),
+    'test777.txt': (3, 4, 5, 7, 11, 13, 17, 19, 23)
 }
 
 
@@ -21,8 +21,6 @@ def set_args():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('--in_filename', action='store', type=str,
                             help='Input filename with dataset')
-    arg_parser.add_argument('--cont_number', action='store', type=str,
-                            help='Containers number')
 
     arguments = arg_parser.parse_args()
 
@@ -31,7 +29,7 @@ def set_args():
 
 def main(arguments):
     elements_adj = pd.read_csv('data/' + arguments.in_filename, sep=',', header=None).values
-    cont_sizes = CONT_SIZES[arguments.cont_number]
+    cont_sizes = CONT_SIZES[arguments.in_filename]
 
     # получение возможных компоновок контейнеров
     containers_groups = ecl.get_containers_by_elems(len(elements_adj), cont_sizes)
