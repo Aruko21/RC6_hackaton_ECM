@@ -1,4 +1,5 @@
 import random as rand
+import numpy as np
 import sys
 from .analysis import q_composition
 
@@ -15,8 +16,10 @@ def transpose(mat):
     return matrix
 
 
-def compose_container(a, b, index_start):
-    c = [sum(i) for i in a]
+def compose_container(adj_matrix_init, b, index_start):
+    adj_matrix = adj_matrix_init[:]
+
+    c = [sum(i) for i in adj_matrix]
     min_c = min(c)
     k = 0
     n = 0
@@ -28,8 +31,8 @@ def compose_container(a, b, index_start):
         n += 1
 
     ind = [k]
-    for i in range(len(a[0])):
-        if a[k][i] != 0 and i != k:
+    for i in range(len(adj_matrix[0])):
+        if adj_matrix[k][i] != 0 and i != k:
             ind.append(i)
 
     sum_ind = sum(ind)
@@ -38,11 +41,11 @@ def compose_container(a, b, index_start):
 
     while len(ind) > b:
         sum_ind_str = []
-        for i in range(len(a)):
+        for i in range(len(adj_matrix)):
             if i in ind:
                 s = 0
                 for j in ind:
-                    s += a[i][j]
+                    s += adj_matrix[i][j]
                 sum_ind_str.append(s)
 
         for i in range(len(sum_ind_str)):
@@ -74,17 +77,17 @@ def compose_container(a, b, index_start):
             index_start.remove(index_start[ind_my])
 
     ind.sort(reverse=True)
-    if len(a) != 0:
+    if len(adj_matrix) != 0:
         for i in ind:
-            del a[i]
+            del adj_matrix[i]
 
-        if len(a) != 0:
-            a_transp = transpose(a)
+        if len(adj_matrix) != 0:
+            a_transp = transpose(adj_matrix)
             for i in ind:
                 del a_transp[i]
-            a = transpose(a_transp)
+            adj_matrix = transpose(a_transp)
 
-    return a, ind, index_new, index_start
+    return adj_matrix, ind, index_new, index_start
 
 
 def compose_containers(adj_matrix, b):
@@ -220,6 +223,8 @@ def compose_containers_adj(adj_matrix, containers):
                     if adj_matrix[h][d] != 0:
                         external_rel_matrix[i][j] += 1
 
+            external_rel_matrix[j][i] = external_rel_matrix[i][j]
+
     return external_rel_matrix
 
 
@@ -227,8 +232,8 @@ def compose_containers_adj(adj_matrix, containers):
 # containers - список возможных размерностей контейнеров
 # adj_matrix - матица смежностей элементов
 def composition_linker(containers, adj_matrix):
-    res_v = compose_containers(adj_matrix, containers)
+    res_v = compose_containers(adj_matrix.tolist(), containers)
     opt_s, opt_containers = optimize(adj_matrix, res_v)
 
     # На выход - матрица смежностей контейнеров
-    return compose_containers_adj(opt_s, opt_containers)
+    return compose_containers_adj(opt_s, opt_containers), opt_containers

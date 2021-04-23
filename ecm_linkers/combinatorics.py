@@ -18,7 +18,7 @@ def get_containers_by_elems(n_elems, capacities):
 
         tmp_arr = [p for p in itertools.combinations_with_replacement(capacities, r=m) if sum(p) == n_elems]
         if tmp_arr:
-            containers.append(tmp_arr)
+            containers += tmp_arr
 
     # На выход - list кортежей с перечислением контейнеров, где значение - емкость контейнера
     # Например, [(6, 7, 7), (2, 4, 7 ,7), ...]
