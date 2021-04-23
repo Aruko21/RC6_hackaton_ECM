@@ -29,7 +29,7 @@ def compose_container(a, b, index_start):
 
     ind = [k]
     for i in range(len(a[0])):
-        if a[k][i] != 0:
+        if a[k][i] != 0 and i != k:
             ind.append(i)
 
     sum_ind = sum(ind)
@@ -45,7 +45,7 @@ def compose_container(a, b, index_start):
                     s += a[i][j]
                 sum_ind_str.append(s)
 
-        for i in range(len(ind)):
+        for i in range(len(sum_ind_str)):
             dif_n.append(sum_ind - sum_ind_str[i])
 
         max_dif = max(dif_n)
