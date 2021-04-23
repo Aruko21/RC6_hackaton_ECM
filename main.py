@@ -53,16 +53,16 @@ def main(arguments):
             best_containers = tmp_containers
             best_cont_group = cont_group
 
-    print(np.array(best_containers_adj))
+    print("Containers adjacent matrix:\n", np.array(best_containers_adj))
     for container in best_containers:
         print("container: '{}' len = {}".format(container, len(container)))
     # print("containers structure: ", best_containers)
     print("containers: ", best_cont_group)
 
-    board_matrix = ecl.placement_linker(best_containers_adj)
+    board_matrix = ecl.placement_linker(np.array(best_containers_adj))
 
     print("board matrix:\n", board_matrix)
-    print("Q = ", ecl.q_placement(board_matrix, best_containers_adj))
+    print("Q = ", ecl.q_placement(board_matrix, np.array(best_containers_adj)))
 
     # -----
     # mock часть для тестирования

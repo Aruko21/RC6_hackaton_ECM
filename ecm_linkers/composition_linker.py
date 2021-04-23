@@ -1,4 +1,5 @@
 import random as rand
+from copy import deepcopy
 import numpy as np
 import sys
 from .analysis import q_composition
@@ -17,7 +18,7 @@ def transpose(mat):
 
 
 def compose_container(adj_matrix_init, b, index_start):
-    adj_matrix = adj_matrix_init[:]
+    adj_matrix = deepcopy(adj_matrix_init)
 
     c = [sum(i) for i in adj_matrix]
     min_c = min(c)
@@ -91,7 +92,7 @@ def compose_container(adj_matrix_init, b, index_start):
 
 
 def compose_containers(adj_matrix, b):
-    a = adj_matrix[:]
+    a = deepcopy(adj_matrix)
 
     index_start = list(range(0, len(a)))
 
@@ -107,7 +108,7 @@ def compose_containers(adj_matrix, b):
 def analyze_delta_r(s, setsV):
     min_dim = len(setsV[0])
     vertic = []
-    gorisont = setsV[:]
+    gorisont = deepcopy(setsV)
 
     for i in range(len(setsV)):
         if len(setsV[i]) <= min_dim:
@@ -152,8 +153,8 @@ def analyze_delta_r(s, setsV):
 
 def optimize(s_matr, setsV):
     opt_containers = []
-    res = setsV[:]  # массив контейнеров
-    s = s_matr[:]   # матрица смежностей элементов
+    res = deepcopy(setsV)  # массив контейнеров
+    s = deepcopy(s_matr)   # матрица смежностей элементов
 
     while len(res) > 1:
         q_prev = sys.maxsize

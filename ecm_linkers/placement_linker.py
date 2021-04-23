@@ -96,7 +96,7 @@ def get_max_l_criterion(board_matrix, adj_containers, ro_vector):
             l_tmp = get_links(j, i, board_matrix, adj_containers)
             l_param[board_matrix[i, j] - 1] = l_tmp / ro_vector[board_matrix[i, j] - 1]
 
-    print("check L criterion: ", l_param)
+    # print("check L criterion: ", l_param)
 
     return np.argmax(l_param) + 1
 
@@ -108,21 +108,21 @@ def get_x_y_options(x, y, board_matrix, adj_containers, ro_vector):
     x_param = x_tmp / ro_vector[board_matrix[y, x] - 1]
     y_param = y_tmp / ro_vector[board_matrix[y, x] - 1]
 
-    print("check x: ", x_param)
-    print("check y: ", y_param)
+    # print("check x: ", x_param)
+    # print("check y: ", y_param)
 
     # Учет дробных вариантов характеристик + перевод в матричные индексы из координат x и y
     if (x_param - int(x_param)) > EPS:
-        x_options = (int(x_param) - 1, int(x_param))
+        x_options = (int(x_param), int(x_param) + 1)
     else:
-        x_options = (int(x_param) - 1,)
+        x_options = (int(x_param),)
 
     if (y_param - int(y_param)) > EPS:
         y_reverse = int(y_param)
-        y_options = (board_matrix.shape[0] - y_reverse, board_matrix.shape[0] - y_reverse - 1)
+        y_options = (board_matrix.shape[0] - 1 - y_reverse, board_matrix.shape[0] - 1 - y_reverse - 1)
     else:
         y_reverse = int(y_param)
-        y_options = (board_matrix.shape[0] - y_reverse,)
+        y_options = (board_matrix.shape[0] - 1 - y_reverse,)
 
     return x_options, y_options
 
@@ -144,7 +144,7 @@ def placement_linker(adj_containers):
     placed_elems = get_base_order(adj_containers, ro_vector)
 
     get_base_placement(placed_elems, board_matrix)
-    print("check base matrix: ", board_matrix)
+    print("check base matrix:\n", board_matrix)
 
     best_q_place = q_placement(board_matrix, adj_containers)
     best_board = board_matrix
@@ -174,6 +174,7 @@ def placement_linker(adj_containers):
                 new_board_matrix[y_max_l, x_max_l] = cont_to_move
 
                 tmp_q_place = q_placement(new_board_matrix, adj_containers)
+                print("tmp q: ", tmp_q_place)
                 if tmp_q_place < best_q_place:
                     best_q_place = tmp_q_place
                     best_board = new_board_matrix
