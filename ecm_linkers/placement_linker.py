@@ -174,13 +174,13 @@ def placement_linker(adj_containers):
                 new_board_matrix[y_max_l, x_max_l] = cont_to_move
 
                 tmp_q_place = q_placement(new_board_matrix, adj_containers)
-                print("tmp q: ", tmp_q_place)
+                # print("tmp q: ", tmp_q_place)
                 if tmp_q_place < best_q_place:
                     best_q_place = tmp_q_place
                     best_board = new_board_matrix
 
-        print("best matrix:\n", best_board)
-        print("Q: ", best_q_place)
+        # print("best matrix:\n", best_board)
+        # print("Q: ", best_q_place)
 
 
     # На выход - матрица размешений.

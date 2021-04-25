@@ -32,6 +32,7 @@ def main(arguments):
     cont_sizes = CONT_SIZES[arguments.in_filename]
 
     # получение возможных компоновок контейнеров
+    print("Computing container group combinations...")
     containers_groups = ecl.get_containers_by_elems(len(elements_adj), cont_sizes)
 
     # print("number of groups: ", len(containers_groups))
@@ -43,8 +44,10 @@ def main(arguments):
     best_containers = []
     best_cont_group = []
 
-    for cont_group in containers_groups:
-        tmp_containers_adj, tmp_containers = ecl.composition_linker(cont_group, elements_adj)
+    print("Computing best composition...")
+    # print("check len: ", len(containers_groups))
+    for cont_group in containers_groups[:100]:
+        tmp_containers_adj, tmp_containers = ecl.composition_linker(cont_group, elements_adj, optimise=False)
         tmp_q_comp = ecl.q_composition(tmp_containers_adj)
 
         if best_q_comp < 0 or tmp_q_comp < best_q_comp:
@@ -53,12 +56,16 @@ def main(arguments):
             best_containers = tmp_containers
             best_cont_group = cont_group
 
+    print("Optimize best composition...")
+    best_containers_adj, best_containers = ecl.composition_linker(best_cont_group, elements_adj, optimise=True)
+
     print("Containers adjacent matrix:\n", np.array(best_containers_adj))
     for container in best_containers:
         print("container: '{}' len = {}".format(container, len(container)))
     # print("containers structure: ", best_containers)
     print("containers: ", best_cont_group)
 
+    print("Computing placement...")
     board_matrix = ecl.placement_linker(np.array(best_containers_adj))
 
     print("board matrix:\n", board_matrix)
@@ -79,23 +86,6 @@ def main(arguments):
     # ])
     #
     # board_matrix = ecl.placement_linker(mock_cont_adj)
-
-    # mock_elems_adj = [
-    #     [0, 0, 0, 0, 0, 1, 0, 0],
-    #     [0, 0, 0, 1, 0, 0, 0, 1],
-    #     [0, 0, 0, 0, 1, 0, 1, 0],
-    #     [0, 1, 0, 0, 0, 1, 0, 1],
-    #     [0, 0, 1, 0, 0, 0, 1, 0],
-    #     [1, 0, 0, 1, 0, 0, 0, 0],
-    #     [0, 0, 1, 0, 1, 0, 0, 1],
-    #     [0, 1, 0, 1, 0, 0, 1, 0]
-    # ]
-    #
-    # containers = [1, 2, 5]
-    #
-    # containers_adj, containers = ecl.composition_linker(containers, mock_elems_adj)
-    #
-    # print(np.array(containers_adj))
 
 
 if __name__ == "__main__":

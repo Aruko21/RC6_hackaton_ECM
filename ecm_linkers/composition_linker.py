@@ -37,10 +37,10 @@ def compose_container(adj_matrix_init, b, index_start):
             ind.append(i)
 
     sum_ind = sum(ind)
-    dif_n = []
     ind.sort(reverse=True)
 
     while len(ind) > b:
+        dif_n = []
         sum_ind_str = []
         for i in range(len(adj_matrix)):
             if i in ind:
@@ -61,6 +61,7 @@ def compose_container(adj_matrix_init, b, index_start):
                 break
 
         ind.pop(ind_remove)
+
 
     ind.sort(reverse=True)
     index_new = []
@@ -157,9 +158,11 @@ def optimize(s_matr, setsV):
     s = deepcopy(s_matr)   # матрица смежностей элементов
 
     while len(res) > 1:
+        # print("len check: ", len(res))
         q_prev = sys.maxsize
         q_cur = sys.maxsize - 1
         while True:
+            # print("q_prev: {}; q_cur: {}".format(q_prev, q_cur))
             if q_prev <= q_cur:
                 break
             q_prev = q_cur
@@ -232,9 +235,11 @@ def compose_containers_adj(adj_matrix, containers):
 # На вход:
 # containers - список возможных размерностей контейнеров
 # adj_matrix - матица смежностей элементов
-def composition_linker(containers, adj_matrix):
-    res_v = compose_containers(adj_matrix.tolist(), containers)
-    opt_s, opt_containers = optimize(adj_matrix, res_v)
+def composition_linker(container_capacities, adj_matrix, optimise=False):
+    containers = compose_containers(adj_matrix.tolist(), container_capacities)
 
-    # На выход - матрица смежностей контейнеров
-    return compose_containers_adj(opt_s, opt_containers), opt_containers
+    if optimise:
+        opt_adj, opt_containers = optimize(adj_matrix, containers)
+        return compose_containers_adj(opt_adj, opt_containers), opt_containers
+
+    return compose_containers_adj(adj_matrix, containers), containers
