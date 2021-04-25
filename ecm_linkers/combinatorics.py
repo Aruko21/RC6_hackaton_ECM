@@ -8,6 +8,8 @@ def get_containers_by_elems(n_elems, capacities):
 
     containers = combination.combination_sum(capacities, n_elems)
 
+    print('appropriate containers: ', containers)
+
     # На выход - list кортежей с перечислением контейнеров, где значение - емкость контейнера
     # Например, [(6, 7, 7), (2, 4, 7 ,7), ...]
     return containers
@@ -37,7 +39,7 @@ class Combination:
 
                 temp.pop()
 
-                print(self.counter)
+                print('{} appropriate combinations'.format(self.counter))
                 break
             else:
                 index = candidates.index(item)
