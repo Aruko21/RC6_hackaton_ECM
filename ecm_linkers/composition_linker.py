@@ -4,130 +4,116 @@ import numpy as np
 import sys
 from .analysis import q_composition
 
-
 # Задача компоновки
 
+# Функция для заполнения контейнера
+# На вход:
+# adj_matrix - матица смежностей элементов
+# b - размерность конейнера
+# indices - индексы матрицы смежностей, где отмечены (-1) обработанные элементы
+def compose_container(adj_matrix, b, indices):
+    indices_new = indices[:]
 
-def transpose(mat):
-    matrix = []
-    for i in range(len(mat[0])):
-        matrix.append(list())
-        for j in range(len(mat)):
-            matrix[i].append(mat[j][i])
-    return matrix
+    # Вычисляются суммы по строкам, минимальная сумма и индекс минимальной суммы матрицы смежности
+    sum_by_str = []
+    min_sum_by_str = -1
+    min_sum_ind = -1
+    for i in range(len(adj_matrix)):
+        sum_tmp = 0
+        for j in range(len(adj_matrix[i])):
+            if indices[j] < 0 or indices[i] < 0:
+                continue
+            sum_tmp += adj_matrix[i][j]
+        sum_by_str.append(sum_tmp)
 
+        if indices[i] < 0:
+            continue
+        if min_sum_by_str > sum_by_str[i] or min_sum_ind < 0:
+            min_sum_by_str = sum_by_str[i]
+            min_sum_ind = i
 
-def compose_container(adj_matrix_init, b, index_start):
-    adj_matrix = deepcopy(adj_matrix_init)
+    # Контейнер заполняется элементами, смежными с элементом с минимальным количеством связей
+    container = [min_sum_ind]
+    indices_new[min_sum_ind] = -1
+    for i in range(len(indices_new)):
+        if indices_new[i] >= 0 and adj_matrix[min_sum_ind][i] > 0:
+            container.append(i)
+            indices_new[i] = -1
 
-    c = [sum(i) for i in adj_matrix]
-    min_c = min(c)
-    k = 0
-    n = 0
+    # Если контейнер получился больше заданной размерности, то лишние элементы удаляются:
+    while len(container) > b:
+        max_delta = -1
+        rem_ind = -1
 
-    for i in c:
-        if i == min_c:
-            k = n
-            break
-        n += 1
+        for i in container:
+            tmp_sum = 0
+            for j in container:
+                tmp_sum += adj_matrix[i][j]
 
-    ind = [k]
-    for i in range(len(adj_matrix[0])):
-        if adj_matrix[k][i] != 0 and i != k:
-            ind.append(i)
+            delta = sum_by_str[i] - tmp_sum
+            if max_delta < delta:
+                max_delta = delta
+                rem_ind = i
 
-    sum_ind = sum(ind)
-    ind.sort(reverse=True)
+        container.remove(rem_ind)
+        indices_new[rem_ind] = rem_ind
 
-    while len(ind) > b:
-        dif_n = []
-        sum_ind_str = []
-        for i in range(len(adj_matrix)):
-            if i in ind:
-                s = 0
-                for j in ind:
-                    s += adj_matrix[i][j]
-                sum_ind_str.append(s)
-
-        for i in range(len(sum_ind_str)):
-            dif_n.append(sum_ind - sum_ind_str[i])
-
-        max_dif = max(dif_n)
-        ind_remove = 0
-
-        for i in range(len(dif_n)):
-            if dif_n[i] == max_dif:
-                ind_remove = i
+    # Если контейнер получился меньше заданной размерности, то он дополняется до требуемого размера
+    while len(container) < b:
+        for i in range(len(indices_new)):
+            if indices_new[i] >= 0:
+                container.append(indices_new[i])
+                indices_new[i] = -1
                 break
 
-        ind.pop(ind_remove)
+    # На выход - заполненный контейнер, индексы обработанных элементов
+    return container, indices_new
 
-
-    ind.sort(reverse=True)
-    index_new = []
-
-    for i in ind:
-        index_new.append(index_start[i])
-    for i in ind:
-        index_start.pop(i)
-
-    while len(ind) < b:
-        if len(index_start) != 0:
-            ind_my = rand.randint(0, b - len(ind) - 1)
-            ind.append(ind_my)
-            index_new.append(index_start[ind_my])
-            index_start.remove(index_start[ind_my])
-
-    ind.sort(reverse=True)
-    if len(adj_matrix) != 0:
-        for i in ind:
-            del adj_matrix[i]
-
-        if len(adj_matrix) != 0:
-            a_transp = transpose(adj_matrix)
-            for i in ind:
-                del a_transp[i]
-            adj_matrix = transpose(a_transp)
-
-    return adj_matrix, ind, index_new, index_start
-
-
+# Функция для заполнения контейнеров
+# На вход:
+# adj_matrix - матица смежностей элементов
+# b - размерность конейнеров
 def compose_containers(adj_matrix, b):
-    a = deepcopy(adj_matrix)
-
-    index_start = list(range(0, len(a)))
-
-    ind_new = [[0] for i in range(len(b))]
-    ind = [[0] for i in range(len(b))]
+    indices = list(range(0, len(adj_matrix)))
+    containers = [[0] for i in range(len(b))]
 
     for i in range(len(b)):
-        a, ind[i], ind_new[i], index_start = compose_container(a, b[i], index_start)
+        containers[i], indices = compose_container(adj_matrix, b[i], indices)
 
-    return ind_new
+    # На выход - массив контейнеров
+    return containers
 
-
-def analyze_delta_r(s, setsV):
-    min_dim = len(setsV[0])
+# Функция для вычисления максимального элемента в матрице R
+# На вход:
+# s - матица смежностей элементов
+# setsV - массив контейнеров
+# ignored - индексы обработанных контейнеров
+def analyze_delta_r(s, setsV, ignored):
+    min_dim = len(s)
+    min_ind = -1
     vertic = []
-    gorisont = deepcopy(setsV)
+    gorisont = []
 
+    # Нахождение контейнера с минимальной размерностью
     for i in range(len(setsV)):
-        if len(setsV[i]) <= min_dim:
+        if i in ignored:
+            continue
+        gorisont.append(setsV[i])
+        if len(setsV[i]) < min_dim:
             min_dim = len(setsV[i])
-            vertic = setsV[i]
+            min_ind = i
 
-    if vertic in gorisont:
-        gorisont.remove(vertic)
-        gorisont = sum(gorisont, [])
-
-    r = [[0 for j in range(len(gorisont))] for i in range(min_dim)]
+    # Размерности матрицы R
+    vertic = setsV[min_ind]
+    gorisont.remove(vertic)
+    gorisont = sum(gorisont, [])
 
     max_el = 0
     max_i = -1
     max_j = -1
 
-    for i in range(min_dim):
-        for j in range(len(gorisont)):
+    for i in vertic:
+        for j in gorisont:
             sum_iqp = 0
             sum_jqp = 0
             sum_ipq = 0
@@ -136,84 +122,82 @@ def analyze_delta_r(s, setsV):
                 sum_jqp += s[i][k]
                 sum_ipq += s[j][k]
             for k in setsV:
-                if gorisont[j] in k:
+                if j in k:
                     for n in k:
                         sum_iqp += s[i][n]
                         sum_jpq += s[j][n]
                     break
 
-            r[i][j] = sum_iqp - sum_jqp + sum_ipq - sum_jpq - 2 * s[i][j]
+            r = sum_iqp - sum_jqp + sum_ipq - sum_jpq - 2 * s[i][j]
 
-            if r[i][j] > max_el:
-                max_el = r[i][j]
+            if r > max_el:
+                max_el = r
                 max_i = i
                 max_j = j
 
+    # На выход - максимальный элемент матрицы R и его индексы
     return max_el, max_i, max_j
 
-
+# Функция для оптимизации опорного решения (итерационный алгоритм)
+# На вход:
+# s_matr - матица смежностей элементов
+# setsV - массив контейнеров
 def optimize(s_matr, setsV):
     opt_containers = []
-    res = deepcopy(setsV)  # массив контейнеров
-    s = deepcopy(s_matr)   # матрица смежностей элементов
 
-    while len(res) > 1:
-        # print("len check: ", len(res))
+    indices = sum(setsV, [])
+    len_setsV = [len(setV) for setV in setsV]
+    ignored = []
+
+    # Пока не обработаны все контейнеры
+    while len(ignored) < len(len_setsV) - 1:
         q_prev = sys.maxsize
         q_cur = sys.maxsize - 1
+
+        # Пока в матрице R максимальный элемент положительный, элементы тасуются между контейнерами
         while True:
-            # print("q_prev: {}; q_cur: {}".format(q_prev, q_cur))
+            tmp = []
+
             if q_prev <= q_cur:
                 break
             q_prev = q_cur
 
-            containers_adj = compose_containers_adj(s, res)
-            q = q_composition(containers_adj)
+            tmp_ind = 0
+            for i in range(len(len_setsV)):
+                tmp.append(indices[tmp_ind:tmp_ind+len_setsV[i]])
+                tmp_ind += len_setsV[i]
 
-            q_cur = q
+            containers_adj = compose_containers_adj(s_matr, tmp)
+            q_cur = q_composition(containers_adj)
 
-            max_el, max_i, max_j = analyze_delta_r(s, res)
+            max_el, max_i, max_j = analyze_delta_r(s_matr, tmp, ignored)
             if max_el <= 0:
                 break
 
-            s[max_i], s[max_j] = s[max_j], s[max_i]
-            for i in range(len(s)):
-                s[i][max_i], s[i][max_j] = s[i][max_j], s[i][max_i]
+            indices[max_i], indices[max_j] = indices[max_j], indices[max_i]
+        
+        min_len = len(s_matr)
+        min_ind = -1
+        for i in range(len(len_setsV)):
+            if i in ignored:
+                continue
+            if len_setsV[i] < min_len:
+                min_len = len_setsV[i]
+                min_ind = i
+        ignored.append(min_ind)
 
-            ind = 0
-            swap_i1 = -1
-            swap_j1 = -1
-            swap_i2 = -1
-            swap_j2 = -1
+    tmp_ind = 0
+    for i in range(len(len_setsV)):
+        opt_containers.append(indices[tmp_ind:tmp_ind+len_setsV[i]])
+        tmp_ind += len_setsV[i]
 
-            for i in range(len(res)):
-                for j in range(len(res[i])):
-                    if ind == max_i:
-                        swap_i1 = i
-                        swap_j1 = j
-                    if ind == max_j:
-                        swap_i2 = i
-                        swap_j2 = j
-                    ind += 1
+    # На выход - массив улучшенных контейнеров
+    return opt_containers
 
-            res[swap_i1][swap_j1], res[swap_i2][swap_j2] = res[swap_i2][swap_j2], res[swap_i1][swap_j1]
-
-        min_dim = len(res[0])
-        rem_ind = -1
-
-        for i in range(len(res)):
-            if len(res[i]) <= min_dim:
-                min_dim = len(res[i])
-                rem_ind = i
-        if res[rem_ind] in res:
-            opt_containers.append(res[rem_ind])
-            res.remove(res[rem_ind])
-
-    opt_containers.append(res[0])
-
-    return s, opt_containers
-
-
+# Функция для вычисления матрицы смежности контейнеров
+# На вход:
+# adj_matrix - матица смежностей элементов
+# containers - массив контейнеров
 def compose_containers_adj(adj_matrix, containers):
     n = len(containers)
     external_rel_matrix = [[0 for j in range(n)] for i in range(n)]
@@ -229,6 +213,7 @@ def compose_containers_adj(adj_matrix, containers):
 
             external_rel_matrix[j][i] = external_rel_matrix[i][j]
 
+    # На выход - матрица смежностей контейнеров
     return external_rel_matrix
 
 
@@ -239,7 +224,8 @@ def composition_linker(container_capacities, adj_matrix, optimise=False):
     containers = compose_containers(adj_matrix.tolist(), container_capacities)
 
     if optimise:
-        opt_adj, opt_containers = optimize(adj_matrix, containers)
-        return compose_containers_adj(opt_adj, opt_containers), opt_containers
+        opt_containers = optimize(adj_matrix, containers)
+        return compose_containers_adj(adj_matrix, opt_containers), opt_containers
 
+    # На выход - матрица смежностей контейнеров
     return compose_containers_adj(adj_matrix, containers), containers
