@@ -2,6 +2,7 @@ import ecm_linkers as ecl
 import numpy as np
 import pandas as pd
 import argparse
+import time
 
 
 # Мапа с размерами контейнеров, где ключ - имя файла (строка), значение - кортеж с размерностями
@@ -44,7 +45,7 @@ def main(arguments):
     best_containers = []
     best_cont_group = []
 
-    print("Computing best composition...")
+    print("\nComputing best composition...")
     # print("check len: ", len(containers_groups))
     for cont_group in containers_groups[:100]:
         tmp_containers_adj, tmp_containers = ecl.composition_linker(cont_group, elements_adj, optimise=False)
@@ -59,17 +60,27 @@ def main(arguments):
     print("Optimize best composition...")
     best_containers_adj, best_containers = ecl.composition_linker(best_cont_group, elements_adj, optimise=True)
 
-    print("Containers adjacent matrix:\n", np.array(best_containers_adj))
-    for container in best_containers:
-        print("container: '{}' len = {}".format(container, len(container)))
-    # print("containers structure: ", best_containers)
-    print("containers: ", best_cont_group)
+    print("\nElements adjacent matrix: (shape ({}x{}))".format(elements_adj.shape[0], elements_adj.shape[1]))
+    if elements_adj.shape[0] > 50:
+        print("Matrix is too big. Watch file: ", arguments.in_filename)
+    else:
+        print(elements_adj)
 
-    print("Computing placement...")
-    board_matrix = ecl.placement_linker(np.array(best_containers_adj))
+    print("best containers group: {}\n".format(best_cont_group))
+    # for i in range(len(best_containers)):
+    #     print("container V{}: '{}' len = {}".format(i + 1, best_containers[i], len(best_containers[i])))
+    ecl.print_each_container_info(best_containers, elements_adj)
 
-    print("board matrix:\n", board_matrix)
-    print("Q = ", ecl.q_placement(board_matrix, np.array(best_containers_adj)))
+    best_cont_adj_np = np.array(best_containers_adj)
+    print("\nContainers adjacent matrix: (shape ({}x{}))"
+          .format(best_cont_adj_np.shape[0], best_cont_adj_np.shape[1]))
+    print(best_cont_adj_np)
+
+    print("\nComputing placement...")
+    board_matrix = ecl.placement_linker(best_cont_adj_np)
+
+    print("\nBest board matrix:\n", board_matrix)
+    print("\nQ = ", ecl.q_placement(board_matrix, best_cont_adj_np))
 
     # -----
     # mock часть для тестирования
@@ -90,4 +101,6 @@ def main(arguments):
 
 if __name__ == "__main__":
     args = set_args()
+    start_time = time.time()
     main(args)
+    print("Execution time: {} seconds".format(time.time() - start_time))

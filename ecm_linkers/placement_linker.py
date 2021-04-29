@@ -144,7 +144,7 @@ def placement_linker(adj_containers):
     placed_elems = get_base_order(adj_containers, ro_vector)
 
     get_base_placement(placed_elems, board_matrix)
-    print("check base matrix:\n", board_matrix)
+    print("Base board matrix:\n", board_matrix)
 
     best_q_place = q_placement(board_matrix, adj_containers)
     best_board = board_matrix
